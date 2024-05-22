@@ -1,0 +1,145 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "capstone-datalake-adf"
+		},
+		"ls_wcd_blob_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_wcd_blob'",
+			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
+		},
+		"ls_my_blob_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_my_blob'",
+			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=capstonedlstorage;"
+		},
+		"ls_ProjectKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://WCDProjectKeyVault.vault.azure.net/"
+		},
+		"ls_rds_pg_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "de-rds.czm23kqmbd6o.ca-central-1.rds.amazonaws.com"
+		},
+		"ls_rds_pg_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "stack"
+		},
+		"ls_rds_pg_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "postgres"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_ProjectKeyVault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This linked service provides secure access to secrets stored in the Azure Key Vault for the project.",
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_ProjectKeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_rds_pg')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This linked service is used to connect to the RDS PostgreSQL database.",
+				"annotations": [],
+				"type": "PostgreSqlV2",
+				"typeProperties": {
+					"server": "[parameters('ls_rds_pg_properties_typeProperties_server')]",
+					"port": 5432,
+					"database": "[parameters('ls_rds_pg_properties_typeProperties_database')]",
+					"username": "[parameters('ls_rds_pg_properties_typeProperties_username')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_ProjectKeyVault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "RDS-PostgreSql-Password"
+					},
+					"sslMode": 2,
+					"authenticationType": "Basic"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ProjectKeyVault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_wcd_blob')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This linked service connects to WeCloudData's public storage blob for use in pipeline 2.",
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_wcd_blob_connectionString')]",
+					"accountKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_ProjectKeyVault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "wcd-blob-access-key"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ProjectKeyVault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_my_blob')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This linked service is used to link my own storage blob for both pipelines.",
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_my_blob_connectionString')]",
+					"accountKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_ProjectKeyVault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "my-blob-access-key"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_ProjectKeyVault')]"
+			]
+		}
+	]
+}
