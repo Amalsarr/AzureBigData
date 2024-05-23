@@ -11,6 +11,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"fileName": "rds-postTypes.csv",
 				"folderPath": "Capstone2/postTypes",
 				"container": "mydatalakefilesystem"
 			},
