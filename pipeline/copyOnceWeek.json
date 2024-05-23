@@ -1,0 +1,17 @@
+{
+	"name": "copyOnceWeek",
+	"properties": {
+		"description": "Weekly data transfer of PostTypes and Users tables from the RDS PostgreSQL database to Azure Blob storage.",
+		"variables": {
+			"UserCopyCompleted": {
+				"type": "Boolean",
+				"defaultValue": "False"
+			},
+			"PostTypeCopyCompleted": {
+				"type": "Boolean",
+				"defaultValue": "False"
+			}
+		},
+		"annotations": []
+	}
+}
