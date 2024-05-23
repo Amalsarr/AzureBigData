@@ -1,5 +1,5 @@
 {
-	"name": "PostgreSqlTable1",
+	"name": "ds_Users_pg",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_rds_pg",
@@ -7,6 +7,10 @@
 		},
 		"annotations": [],
 		"type": "PostgreSqlV2Table",
-		"schema": []
+		"schema": [],
+		"typeProperties": {
+			"schema": "raw_st",
+			"table": "users"
+		}
 	}
 }
