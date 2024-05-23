@@ -78,7 +78,7 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "PostgreSqlTable1",
+									"referenceName": "ds_Users_pg",
 									"type": "DatasetReference"
 								}
 							]

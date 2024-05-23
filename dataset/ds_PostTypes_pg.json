@@ -1,7 +1,7 @@
 {
-	"name": "ds_Users_pg",
+	"name": "ds_PostTypes_pg",
 	"properties": {
-		"description": "This dataset represents the Users table stored in the RDS PostgreSQL DB.",
+		"description": "This dataset represents the PostTypes table stored in the RDS PostgreSQL DB.",
 		"linkedServiceName": {
 			"referenceName": "ls_rds_pg",
 			"type": "LinkedServiceReference"
@@ -11,7 +11,7 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": "raw_st",
-			"table": "users"
+			"table": "posttypes"
 		}
 	}
 }
