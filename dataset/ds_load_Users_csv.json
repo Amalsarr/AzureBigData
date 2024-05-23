@@ -1,6 +1,7 @@
 {
 	"name": "ds_load_Users_csv",
 	"properties": {
+		"description": "This data set loads users from RDS in postgressql format to users file in my blob storage in a csv format",
 		"linkedServiceName": {
 			"referenceName": "ls_my_blob",
 			"type": "LinkedServiceReference"
