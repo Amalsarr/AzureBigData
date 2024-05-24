@@ -299,6 +299,12 @@
 				}
 			}
 		],
+		"variables": {
+			"UserFileCopied": {
+				"type": "Boolean",
+				"defaultValue": false
+			}
+		},
 		"annotations": []
 	}
 }
