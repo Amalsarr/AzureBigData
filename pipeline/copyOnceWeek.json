@@ -35,13 +35,7 @@
 								"sink": {
 									"type": "DelimitedTextSink",
 									"storeSettings": {
-										"type": "AzureBlobStorageWriteSettings",
-										"copyBehavior": "PreserveHierarchy",
-										"metadata": [
-											{
-												"value": ""
-											}
-										]
+										"type": "AzureBlobStorageWriteSettings"
 									},
 									"formatSettings": {
 										"type": "DelimitedTextWriteSettings",
@@ -217,22 +211,94 @@
 									"type": "DatasetReference"
 								}
 							]
+						},
+						{
+							"name": "Users Conditional Action",
+							"description": "Make an action depending on post files existence",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Copy Users",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(activity('Copy Users').output.filesWritten, 0)",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set UserFileCopied",
+										"description": "\"Set the UserFileCopied pipeline variable to true indicating successful copy attempt",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "",
+											"value": ""
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Users Retry WaitTime",
+										"description": "Set the time till the next copy retry attempt",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1800
+										}
+									}
+								]
+							}
 						}
 					],
 					"timeout": "0.12:00:00"
 				}
+			},
+			{
+				"name": "Check User FilesCopied",
+				"description": "Handle User copy failure case",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Retry Copy Users",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('UserFileCopied')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Copy Users Files Failure",
+							"description": "A fail activity associated with the status of copying files from source",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "User files were not copied from the source",
+								"errorCode": "CopyError"
+							}
+						}
+					]
+				}
 			}
 		],
-		"variables": {
-			"PostTypeFileCopied": {
-				"type": "Boolean",
-				"defaultValue": "False"
-			},
-			"UserFileCopied": {
-				"type": "Boolean",
-				"defaultValue": "False"
-			}
-		},
 		"annotations": []
 	}
 }
