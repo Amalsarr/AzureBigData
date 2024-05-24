@@ -242,8 +242,8 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"variableName": "",
-											"value": ""
+											"variableName": "UserFileCopied",
+											"value": true
 										}
 									}
 								],
