@@ -5,11 +5,11 @@
 		"factoryName": {
 			"value": "capstone-datalake-adf"
 		},
-		"ls_wcd_blob_connectionString": {
-			"value": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
-		},
 		"ls_my_blob_connectionString": {
 			"value": "DefaultEndpointsProtocol=https;AccountName=capstonedlstorage;"
+		},
+		"ls_wcd_blob_connectionString": {
+			"value": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
 		},
 		"ls_ProjectKeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://WCDProjectKeyVault.vault.azure.net/"

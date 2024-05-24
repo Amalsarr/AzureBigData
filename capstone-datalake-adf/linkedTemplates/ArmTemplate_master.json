@@ -7,15 +7,15 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "capstone-datalake-adf"
 		},
-		"ls_wcd_blob_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'ls_wcd_blob'",
-			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
-		},
 		"ls_my_blob_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_my_blob'",
 			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=capstonedlstorage;"
+		},
+		"ls_wcd_blob_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_wcd_blob'",
+			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
 		},
 		"ls_ProjectKeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
@@ -60,11 +60,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"ls_wcd_blob_connectionString": {
-						"value": "[parameters('ls_wcd_blob_connectionString')]"
-					},
 					"ls_my_blob_connectionString": {
 						"value": "[parameters('ls_my_blob_connectionString')]"
+					},
+					"ls_wcd_blob_connectionString": {
+						"value": "[parameters('ls_wcd_blob_connectionString')]"
 					},
 					"ls_ProjectKeyVault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('ls_ProjectKeyVault_properties_typeProperties_baseUrl')]"
