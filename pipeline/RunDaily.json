@@ -126,6 +126,7 @@
 									"storeSettings": {
 										"type": "AzureBlobStorageReadSettings",
 										"recursive": true,
+										"wildcardFolderPath": "Posts_today",
 										"enablePartitionDiscovery": false
 									},
 									"formatSettings": {
