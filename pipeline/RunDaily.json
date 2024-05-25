@@ -197,6 +197,17 @@
 											"value": "@bool(true)"
 										}
 									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Retry WaitTime",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1800
+										}
+									}
 								]
 							}
 						}
