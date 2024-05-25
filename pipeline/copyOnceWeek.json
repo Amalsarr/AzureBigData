@@ -408,6 +408,30 @@
 					],
 					"timeout": "0.12:00:00"
 				}
+			},
+			{
+				"name": "If Condition2",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('PostTypeFileCopied')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Copy PostTypes Files Failure",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "PostType files were not copied from the source.",
+								"errorCode": "CopyFailure"
+							}
+						}
+					]
+				}
 			}
 		],
 		"variables": {
