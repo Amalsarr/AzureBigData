@@ -39,481 +39,11 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/copyOnceWeek')]",
+			"name": "[concat(parameters('factoryName'), '/RunOnceWeekly')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Weekly data transfer of PostTypes and Users tables from the RDS PostgreSQL database to Azure Blob storage.",
-				"activities": [
-					{
-						"name": "Retry Copy Users",
-						"description": "\"Executes a set of activities in a loop to reattempt copying data for a specific duration.",
-						"type": "Until",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@variables('UserFileCopied')",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Copy Users",
-									"description": "Copy Users from RDS PostgreSQL DB",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "PostgreSqlV2Source"
-										},
-										"sink": {
-											"type": "DelimitedTextSink",
-											"storeSettings": {
-												"type": "AzureBlobStorageWriteSettings"
-											},
-											"formatSettings": {
-												"type": "DelimitedTextWriteSettings",
-												"quoteAllText": true,
-												"fileExtension": ".txt"
-											}
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"mappings": [
-												{
-													"source": {
-														"name": "id",
-														"type": "Int32",
-														"physicalType": "integer"
-													},
-													"sink": {
-														"name": "id",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "age",
-														"type": "String",
-														"physicalType": "character varying"
-													},
-													"sink": {
-														"name": "age",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "creationdate",
-														"type": "DateTime",
-														"physicalType": "date"
-													},
-													"sink": {
-														"name": "creationdate",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "displayname",
-														"type": "String",
-														"physicalType": "character varying"
-													},
-													"sink": {
-														"name": "displayname",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "downvotes",
-														"type": "Int32",
-														"physicalType": "integer"
-													},
-													"sink": {
-														"name": "downvotes",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "emailhash",
-														"type": "String",
-														"physicalType": "character varying"
-													},
-													"sink": {
-														"name": "emailhash",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "location",
-														"type": "String",
-														"physicalType": "character varying"
-													},
-													"sink": {
-														"name": "location",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "reputation",
-														"type": "Int32",
-														"physicalType": "integer"
-													},
-													"sink": {
-														"name": "reputation",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "upvotes",
-														"type": "Int32",
-														"physicalType": "integer"
-													},
-													"sink": {
-														"name": "upvotes",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "views",
-														"type": "Int32",
-														"physicalType": "integer"
-													},
-													"sink": {
-														"name": "views",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "websiteurl",
-														"type": "String",
-														"physicalType": "character varying"
-													},
-													"sink": {
-														"name": "websiteurl",
-														"type": "String",
-														"physicalType": "String"
-													}
-												},
-												{
-													"source": {
-														"name": "accountid",
-														"type": "Int32",
-														"physicalType": "integer"
-													},
-													"sink": {
-														"name": "accountid",
-														"type": "String",
-														"physicalType": "String"
-													}
-												}
-											],
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "ds_Users_pg",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_load_Users_csv",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									]
-								},
-								{
-									"name": "Users Conditional Action",
-									"description": "Make an action depending on post files existence",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "Copy Users",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@equals(activity('Copy Users').output.filesWritten, 0)",
-											"type": "Expression"
-										},
-										"ifFalseActivities": [
-											{
-												"name": "Set UserFileCopied",
-												"description": "\"Set the UserFileCopied pipeline variable to true indicating successful copy attempt",
-												"type": "SetVariable",
-												"dependsOn": [],
-												"policy": {
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "UserFileCopied",
-													"value": true
-												}
-											}
-										],
-										"ifTrueActivities": [
-											{
-												"name": "Users Retry WaitTime",
-												"description": "Set the time till the next copy retry attempt",
-												"type": "Wait",
-												"dependsOn": [],
-												"userProperties": [],
-												"typeProperties": {
-													"waitTimeInSeconds": 1800
-												}
-											}
-										]
-									}
-								}
-							],
-							"timeout": "0.12:00:00"
-						}
-					},
-					{
-						"name": "Check User FilesCopied",
-						"description": "Handle User copy failure case",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "Retry Copy Users",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@variables('UserFileCopied')",
-								"type": "Expression"
-							},
-							"ifFalseActivities": [
-								{
-									"name": "Copy Users Files Failure",
-									"description": "A fail activity associated with the status of copying files from source",
-									"type": "Fail",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"message": "User files were not copied from the source",
-										"errorCode": "CopyError"
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "Retry Copy PostTypes",
-						"type": "Until",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@variables('PostTypeFileCopied')",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "PostTypes Conditional Action",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "Copy PostType",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@equals(activity('Copy PostType').output.filesWritten, 0)",
-											"type": "Expression"
-										},
-										"ifFalseActivities": [
-											{
-												"name": "Set PostTypeFileCopied",
-												"type": "SetVariable",
-												"dependsOn": [],
-												"policy": {
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "PostTypeFileCopied",
-													"value": true
-												}
-											}
-										],
-										"ifTrueActivities": [
-											{
-												"name": "PostType Retry WaitTime",
-												"type": "Wait",
-												"dependsOn": [],
-												"userProperties": [],
-												"typeProperties": {
-													"waitTimeInSeconds": 1800
-												}
-											}
-										]
-									}
-								},
-								{
-									"name": "Copy PostType",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "PostgreSqlV2Source"
-										},
-										"sink": {
-											"type": "DelimitedTextSink",
-											"storeSettings": {
-												"type": "AzureBlobStorageWriteSettings"
-											},
-											"formatSettings": {
-												"type": "DelimitedTextWriteSettings",
-												"quoteAllText": true,
-												"fileExtension": ".txt"
-											}
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "ds_PostTypes_pg",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_load_PostTypes_csv",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									]
-								}
-							],
-							"timeout": "0.12:00:00"
-						}
-					},
-					{
-						"name": "Check PostType FilesCopied",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "Retry Copy PostTypes",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@variables('PostTypeFileCopied')",
-								"type": "Expression"
-							},
-							"ifFalseActivities": [
-								{
-									"name": "Copy PostTypes Files Failure",
-									"type": "Fail",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"message": "PostType files were not copied from the source.",
-										"errorCode": "CopyFailure"
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"UserFileCopied": {
-						"type": "Boolean",
-						"defaultValue": false
-					},
-					"PostTypeFileCopied": {
-						"type": "Boolean",
-						"defaultValue": false
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_Users_pg')]",
-				"[concat(variables('factoryId'), '/datasets/ds_load_Users_csv')]",
-				"[concat(variables('factoryId'), '/datasets/ds_PostTypes_pg')]",
-				"[concat(variables('factoryId'), '/datasets/ds_load_PostTypes_csv')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
+				"description": "Copy PostTypes and Users tables from RDS PostgreSQL DB on weekly basis.",
 				"activities": [
 					{
 						"name": "Retry Copy Users",
@@ -941,7 +471,6 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"fileName": "*.parquet",
 						"folderPath": "Capstone2/posts",
 						"container": "mydatalakefilesystem"
 					},
@@ -1084,14 +613,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pipeline1",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					},
-					{
-						"pipelineReference": {
-							"referenceName": "copyOnceWeek",
+							"referenceName": "RunOnceWeekly",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1119,8 +641,291 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pipeline1')]",
-				"[concat(variables('factoryId'), '/pipelines/copyOnceWeek')]"
+				"[concat(variables('factoryId'), '/pipelines/RunOnceWeekly')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RunDaily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Copy Posts parquet files daily from an WCD's Azure blob storage container",
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"description": "Get information about the dataset to check if there is any content",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_load_Posts_WCD_pq",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "ParquetReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Check If Files Exist",
+						"description": "An if condition activity that helps in deleting files only if the exist",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(activity('Get Metadata1').output.exists)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Delete Posts",
+									"description": "Delete posts from Posts directory",
+									"type": "Delete",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "ds_load_Posts_WCD_pq",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"logStorageSettings": {
+											"linkedServiceName": {
+												"referenceName": "ls_my_blob",
+												"type": "LinkedServiceReference"
+											},
+											"path": "mydatalakefilesystem/Capstone2/DailyDeletedLog"
+										},
+										"enableLogging": true,
+										"storeSettings": {
+											"type": "AzureBlobStorageReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Retry Loop",
+						"description": "Executes a set of activities in a loop for a specific duration.",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Check If Files Exist",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@variables('FilesCopied')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy Posts",
+									"description": "Copy posts from WCD's Azure blob storage",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"wildcardFolderPath": "archive",
+												"wildcardFileName": "*.parquet",
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_Posts_WCD_pq",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_load_Posts_WCD_pq",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								},
+								{
+									"name": "Copy Posts Conditional Action",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "Copy Posts",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(activity('Copy Posts').output.filesWritten, 0)",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Set FilesCopied",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "FilesCopied",
+													"value": "@bool(true)"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "Retry WaitTime",
+												"type": "Wait",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"waitTimeInSeconds": 1800
+												}
+											}
+										]
+									}
+								}
+							],
+							"timeout": "01:00:00"
+						}
+					},
+					{
+						"name": "Check FilesCopied",
+						"type": "IfCondition",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@variables('FilesCopied')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Copy Files Failure",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "Posts files were not copied from the source.",
+										"errorCode": "CopyError"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "ML Post Classification",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"FilesCopied": {
+						"type": "Boolean",
+						"defaultValue": false
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_load_Posts_WCD_pq')]",
+				"[concat(variables('factoryId'), '/datasets/ds_Posts_WCD_pq')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_my_blob')]"
 			]
 		}
 	]
