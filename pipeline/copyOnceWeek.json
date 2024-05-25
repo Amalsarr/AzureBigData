@@ -312,11 +312,18 @@
 						{
 							"name": "If Condition1",
 							"type": "IfCondition",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Copy PostType",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@equals(activity(Copy postType').output.filesWritten, 0)",
+									"value": "@equals(activity(Copy PostType').output.filesWritten, 0)",
 									"type": "Expression"
 								},
 								"ifFalseActivities": [
