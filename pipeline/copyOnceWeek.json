@@ -303,6 +303,10 @@
 			"UserFileCopied": {
 				"type": "Boolean",
 				"defaultValue": false
+			},
+			"PostTypeFileCopied ": {
+				"type": "Boolean",
+				"defaultValue": false
 			}
 		},
 		"annotations": []
