@@ -310,7 +310,7 @@
 					},
 					"activities": [
 						{
-							"name": "If Condition1",
+							"name": "PostTypes Conditional Action",
 							"type": "IfCondition",
 							"dependsOn": [
 								{
@@ -410,9 +410,16 @@
 				}
 			},
 			{
-				"name": "If Condition2",
+				"name": "Check PostType FilesCopied",
 				"type": "IfCondition",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Retry Copy PostTypes",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
