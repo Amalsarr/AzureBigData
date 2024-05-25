@@ -218,14 +218,9 @@
 			{
 				"name": "Check FilesCopied",
 				"type": "IfCondition",
-				"dependsOn": [
-					{
-						"activity": "Retry Loop",
-						"dependencyConditions": [
-							"Completed"
-						]
-					}
-				],
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
@@ -242,6 +237,21 @@
 								"message": "Posts files were not copied from the source.",
 								"errorCode": "CopyError"
 							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "ML Post Classification",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": []
 						}
 					]
 				}
