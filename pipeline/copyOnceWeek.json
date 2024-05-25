@@ -316,7 +316,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@equals(activity(Copy PostType').output.filesWritten, 0)",
+									"value": "@equals(activity(Copy postType').output.filesWritten, 0)",
 									"type": "Expression"
 								},
 								"ifFalseActivities": [
@@ -332,6 +332,17 @@
 										"typeProperties": {
 											"variableName": "PostTypeFileCopied ",
 											"value": true
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "PostType Retry WaitTime",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1800
 										}
 									}
 								]
