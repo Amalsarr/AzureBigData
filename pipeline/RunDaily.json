@@ -26,6 +26,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -195,7 +196,10 @@
 										"userProperties": [],
 										"typeProperties": {
 											"variableName": "FilesCopied",
-											"value": "@bool(true)"
+											"value": {
+												"value": "@bool(true)",
+												"type": "Expression"
+											}
 										}
 									}
 								],
@@ -219,9 +223,14 @@
 			{
 				"name": "Check FilesCopied",
 				"type": "IfCondition",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Retry Loop",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
@@ -252,7 +261,10 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
-							"userProperties": []
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Workspace/Users/amalalsarrar@gmail.com/5_Model_Prediction"
+							}
 						}
 					]
 				}
