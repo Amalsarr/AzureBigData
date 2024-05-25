@@ -341,6 +341,150 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "Retry Copy PostTypes",
+						"type": "Until",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@variables('PostTypeFileCopied')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "PostTypes Conditional Action",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "Copy PostType",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(activity('Copy PostType').output.filesWritten, 0)",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Set PostTypeFileCopied",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "PostTypeFileCopied",
+													"value": true
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "PostType Retry WaitTime",
+												"type": "Wait",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"waitTimeInSeconds": 1800
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "Copy PostType",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "PostgreSqlV2Source"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_PostTypes_pg",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_load_PostTypes_csv",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "Check PostType FilesCopied",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Retry Copy PostTypes",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@variables('PostTypeFileCopied')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Copy PostTypes Files Failure",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "PostType files were not copied from the source.",
+										"errorCode": "CopyFailure"
+									}
+								}
+							]
+						}
 					}
 				],
 				"policy": {
@@ -350,13 +494,19 @@
 					"UserFileCopied": {
 						"type": "Boolean",
 						"defaultValue": false
+					},
+					"PostTypeFileCopied": {
+						"type": "Boolean",
+						"defaultValue": false
 					}
 				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_Users_pg')]",
-				"[concat(variables('factoryId'), '/datasets/ds_load_Users_csv')]"
+				"[concat(variables('factoryId'), '/datasets/ds_load_Users_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_PostTypes_pg')]",
+				"[concat(variables('factoryId'), '/datasets/ds_load_PostTypes_csv')]"
 			]
 		},
 		{
