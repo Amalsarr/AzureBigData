@@ -1,6 +1,7 @@
 {
-	"name": "pipeline1",
+	"name": "RunOnceWeekly",
 	"properties": {
+		"description": "Copy PostTypes and Users tables from RDS PostgreSQL DB on weekly basis.",
 		"activities": [
 			{
 				"name": "Retry Copy Users",
