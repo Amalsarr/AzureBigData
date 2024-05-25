@@ -87,6 +87,87 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Retry Loop",
+				"description": "Executes a set of activities in a loop for a specific duration.",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "Check If Files Exist",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('FilesCopied')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy Posts",
+							"description": "Copy posts from WCD's Azure blob storage",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"wildcardFileName": "*.parquet",
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "ParquetReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_Posts_WCD_pq",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_load_Posts_WCD_pq",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					],
+					"timeout": "01:00:00"
+				}
 			}
 		],
 		"variables": {
