@@ -338,7 +338,7 @@
 										"userProperties": [],
 										"typeProperties": {
 											"variableName": "PostTypeFileCopied ",
-											"value": true
+											"value": "true"
 										}
 									}
 								],
@@ -446,7 +446,7 @@
 				"type": "Boolean",
 				"defaultValue": false
 			},
-			"PostTypeFileCopied ": {
+			"PostTypeFileCopied": {
 				"type": "Boolean",
 				"defaultValue": false
 			}
