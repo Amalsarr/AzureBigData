@@ -264,6 +264,10 @@
 							"userProperties": [],
 							"typeProperties": {
 								"notebookPath": "/Workspace/Users/amalalsarrar@gmail.com/5_Model_Prediction"
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureDatabricks1",
+								"type": "LinkedServiceReference"
 							}
 						}
 					]
