@@ -164,6 +164,41 @@
 									"type": "DatasetReference"
 								}
 							]
+						},
+						{
+							"name": "Copy Posts Conditional Action",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Copy Posts",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(activity('Copy Posts').output.filesWritten, 0)",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set FilesCopied",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "FilesCopied",
+											"value": "@bool(true)"
+										}
+									}
+								]
+							}
 						}
 					],
 					"timeout": "01:00:00"
