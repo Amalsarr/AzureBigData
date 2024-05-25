@@ -1,6 +1,7 @@
 {
-	"name": "pipeline1",
+	"name": "RunDaily",
 	"properties": {
+		"description": "Copy Posts parquet files daily from an WCD's Azure blob storage container",
 		"annotations": []
 	}
 }
