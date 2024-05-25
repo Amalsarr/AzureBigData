@@ -11,7 +11,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"folderPath": "archive",
+				"fileName": "*.parquet",
+				"folderPath": "Posts_today",
 				"container": "de-project-st"
 			},
 			"compressionCodec": "snappy"
