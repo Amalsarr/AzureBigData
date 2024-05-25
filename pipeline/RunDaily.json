@@ -2,6 +2,12 @@
 	"name": "RunDaily",
 	"properties": {
 		"description": "Copy Posts parquet files daily from an WCD's Azure blob storage container",
+		"variables": {
+			"FilesCopied": {
+				"type": "Boolean",
+				"defaultValue": false
+			}
+		},
 		"annotations": []
 	}
 }
