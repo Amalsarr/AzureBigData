@@ -323,7 +323,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@equals(activity(Copy PostType').output.filesWritten, 0)",
+									"value": "@equals(activity('Copy PostType').output.filesWritten, 0)",
 									"type": "Expression"
 								},
 								"ifFalseActivities": [
