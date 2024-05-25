@@ -2,6 +2,38 @@
 	"name": "RunDaily",
 	"properties": {
 		"description": "Copy Posts parquet files daily from an WCD's Azure blob storage container",
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"description": "Get information about the dataset to check if there is any content",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_load_Posts_WCD_pq",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
+				}
+			}
+		],
 		"variables": {
 			"FilesCopied": {
 				"type": "Boolean",
