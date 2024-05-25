@@ -318,7 +318,23 @@
 								"expression": {
 									"value": "@equals(activity(Copy PostType').output.filesWritten, 0)",
 									"type": "Expression"
-								}
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set PostTypeFileCopied",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "PostTypeFileCopied ",
+											"value": true
+										}
+									}
+								]
 							}
 						}
 					],
