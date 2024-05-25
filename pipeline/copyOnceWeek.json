@@ -337,8 +337,8 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"variableName": "PostTypeFileCopied ",
-											"value": "true"
+											"variableName": "PostTypeFileCopied",
+											"value": true
 										}
 									}
 								],
