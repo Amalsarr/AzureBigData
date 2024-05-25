@@ -214,6 +214,37 @@
 					],
 					"timeout": "01:00:00"
 				}
+			},
+			{
+				"name": "Check FilesCopied",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Retry Loop",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('FilesCopied')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Copy Files Failure",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "Posts files were not copied from the source.",
+								"errorCode": "CopyError"
+							}
+						}
+					]
+				}
 			}
 		],
 		"variables": {
