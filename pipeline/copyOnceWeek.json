@@ -297,6 +297,27 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Retry Copy PostTypes",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('PostTypeFileCopied')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": []
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
 			}
 		],
 		"variables": {
