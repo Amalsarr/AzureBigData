@@ -18,12 +18,19 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "AzureSqlTable1",
+						"referenceName": "ds_load_Posts_WCD_pq",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
 						"exists"
-					]
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
 				}
 			},
 			{
