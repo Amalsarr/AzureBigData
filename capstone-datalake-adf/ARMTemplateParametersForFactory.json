@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "capstone-datalake-adf"
 		},
+		"AzureSqlDatabase1_connectionString": {
+			"value": ""
+		},
 		"ls_my_blob_connectionString": {
 			"value": "DefaultEndpointsProtocol=https;AccountName=capstonedlstorage;"
 		},
