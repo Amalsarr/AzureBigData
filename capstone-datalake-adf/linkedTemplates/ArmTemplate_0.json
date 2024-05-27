@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "capstone-datalake-adf"
 		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
 		"AzureSqlDatabase1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
@@ -20,6 +24,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_wcd_blob'",
 			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://capstonedlstorage.dfs.core.windows.net/"
 		},
 		"ls_ProjectKeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
@@ -42,6 +50,23 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -68,6 +93,46 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_load_generic_pq')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This data set loads post from we cloud data's blob storage to posts file in my blob storage in a Parquet format",
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().path",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AzureDatabricks1')]",
@@ -377,46 +442,6 @@
 					"escapeChar": "\\",
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_my_blob')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_load_generic_pq')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "This data set loads post from we cloud data's blob storage to posts file in my blob storage in a Parquet format",
-				"linkedServiceName": {
-					"referenceName": "ls_my_blob",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"container": {
-						"type": "string"
-					},
-					"path": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@dataset().path",
-							"type": "Expression"
-						},
-						"container": {
-							"value": "@dataset().container",
-							"type": "Expression"
-						}
-					},
-					"compressionCodec": "snappy"
 				},
 				"schema": []
 			},
@@ -1085,7 +1110,7 @@
 					"sinks": [
 						{
 							"linkedService": {
-								"referenceName": "ls_my_blob",
+								"referenceName": "AzureDataLakeStorage1",
 								"type": "LinkedServiceReference"
 							},
 							"name": "SavePostsData",
@@ -1096,7 +1121,7 @@
 						},
 						{
 							"linkedService": {
-								"referenceName": "ls_my_blob",
+								"referenceName": "AzureDataLakeStorage1",
 								"type": "LinkedServiceReference"
 							},
 							"name": "SaveIncrementalDate"
@@ -1144,16 +1169,22 @@
 						"FitlerOnlyIncrementalData sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
-						"     container: 'mydatalakefilesystem',",
+						"     fileSystem: 'mydatalakefilesystem',",
 						"     folderPath: 'Capstone2/incremetal_pl/posts_incremental/inbound',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> SavePostsData",
 						"GetIncrementalDate sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
-						"     container: 'mydatalakefilesystem',",
+						"     fileSystem: 'mydatalakefilesystem',",
 						"     folderPath: 'Capstone2/incremetal_pl/incrementalDate',",
 						"     truncate: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> SaveIncrementalDate"
 					]
@@ -1161,6 +1192,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_Posts_WCD_pq1')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_my_blob')]"
 			]
 		},
@@ -1197,7 +1229,7 @@
 								"exists"
 							],
 							"storeSettings": {
-								"type": "AzureBlobStorageReadSettings",
+								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
 								"enablePartitionDiscovery": false
 							},
@@ -1360,7 +1392,7 @@
 							},
 							"enableLogging": false,
 							"storeSettings": {
-								"type": "AzureBlobStorageReadSettings",
+								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
 								"enablePartitionDiscovery": false
 							}
@@ -1389,7 +1421,7 @@
 							"source": {
 								"type": "ParquetSource",
 								"storeSettings": {
-									"type": "AzureBlobStorageReadSettings",
+									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"enablePartitionDiscovery": false
 								},
@@ -1400,7 +1432,7 @@
 							"sink": {
 								"type": "ParquetSink",
 								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings"
+									"type": "AzureBlobFSWriteSettings"
 								},
 								"formatSettings": {
 									"type": "ParquetWriteSettings"
@@ -1488,47 +1520,6 @@
 				"[concat(variables('factoryId'), '/datasets/ds_load_generic_pq')]",
 				"[concat(variables('factoryId'), '/dataflows/Load Posts Data')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/trigger1')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "RunOnceWeekly",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Week",
-						"interval": 1,
-						"startTime": "2024-05-24T23:43:00",
-						"timeZone": "Arab Standard Time",
-						"schedule": {
-							"minutes": [
-								37
-							],
-							"hours": [
-								9
-							],
-							"weekDays": [
-								"Saturday"
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/RunOnceWeekly')]"
 			]
 		}
 	]

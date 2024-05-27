@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "capstone-datalake-adf"
 		},
+		"AzureDataLakeStorage1_accountKey": {
+			"value": ""
+		},
 		"AzureSqlDatabase1_connectionString": {
 			"value": ""
 		},
@@ -13,6 +16,9 @@
 		},
 		"ls_wcd_blob_connectionString": {
 			"value": "DefaultEndpointsProtocol=https;AccountName=wcddestorageexternal;"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://capstonedlstorage.dfs.core.windows.net/"
 		},
 		"ls_ProjectKeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://WCDProjectKeyVault.vault.azure.net/"
