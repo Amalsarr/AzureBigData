@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "This data set loads post from we cloud data's blob storage to posts file in my blob storage in a Parquet format",
 		"linkedServiceName": {
-			"referenceName": "ls_my_blob",
+			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
@@ -18,12 +18,12 @@
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobStorageLocation",
+				"type": "AzureBlobFSLocation",
 				"fileName": {
 					"value": "@dataset().path",
 					"type": "Expression"
 				},
-				"container": {
+				"fileSystem": {
 					"value": "@dataset().container",
 					"type": "Expression"
 				}
