@@ -22,7 +22,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"container": "mydatalakefilesystem",
-							"path": "Capstone2/incrementalDate/"
+							"path": "Capstone2/incremetal_pl/incrementalDate/"
 						}
 					},
 					"fieldList": [
@@ -111,7 +111,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"container": "mydatalakefilesystem",
-										"path": "Capstone2/incrementalDate/"
+										"path": "Capstone2/incremetal_pl/incrementalDate/"
 									}
 								}
 							}
@@ -181,14 +181,13 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"container": "mydatalakefilesystem",
-							"path": "Capstone2/posts_incremental/inbound/"
+							"path": "Capstone2/incremetal_pl/posts_incremental/inbound/"
 						}
 					},
 					"enableLogging": false,
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
 						"recursive": true,
-						"wildcardFileName": "*",
 						"enablePartitionDiscovery": false
 					}
 				}
@@ -249,7 +248,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"container": "mydatalakefilesystem",
-							"path": "Capstone2/posts_incremental/inbound"
+							"path": "Capstone2/incremetal_pl/posts_incremental/inbound"
 						}
 					}
 				],
@@ -260,7 +259,7 @@
 						"parameters": {
 							"container": "mydatalakefilesystem",
 							"path": {
-								"value": "@concat(\n    'Capstone2/posts_incremental/archive/',\n    formatDateTime(utcNow(), 'yyyy'),\n    '/',\n    formatDateTime(utcNow(), 'MM'),\n    '/',\n    formatDateTime(utcNow(), 'dd'),\n    '/'\n)",
+								"value": "@concat(\n    'Capstone2/incremetal_pl/posts_incremental/archive/',\n    formatDateTime(utcNow(), 'yyyy'),\n    '/',\n    formatDateTime(utcNow(), 'MM'),\n    '/',\n    formatDateTime(utcNow(), 'dd'),\n    '/'\n)",
 								"type": "Expression"
 							}
 						}
