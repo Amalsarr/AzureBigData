@@ -305,77 +305,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Archive the data",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "BinarySource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false
-								},
-								"formatSettings": {
-									"type": "BinaryReadSettings"
-								}
-							},
-							"sink": {
-								"type": "BinarySink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "ls_load_generic_binary",
-								"type": "DatasetReference",
-								"parameters": {
-									"filePath": "Capstone2/incremetal_pl/posts_incremental/inbound/",
-									"container": "mydatalakefilesystem"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ls_load_generic_binary",
-								"type": "DatasetReference",
-								"parameters": {
-									"filePath": {
-										"value": "@concat(\n    'Capstone2/incremetal_pl/posts_incremental/archive/',\n    formatDateTime(utcNow(), 'yyyy'),\n    '/',\n    formatDateTime(utcNow(), 'MM'),\n    '/',\n    formatDateTime(utcNow(), 'dd'),\n    '/'\n)",
-										"type": "Expression"
-									},
-									"container": "mydatalakefilesystem"
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ls_load_generic_binary')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/ds_PostTypes_pg')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1197,6 +1126,111 @@
 				"[concat(variables('factoryId'), '/datasets/ds_load_Users_csv')]",
 				"[concat(variables('factoryId'), '/datasets/ds_PostTypes_pg')]",
 				"[concat(variables('factoryId'), '/datasets/ds_load_PostTypes_csv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Load Posts Data')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_Posts_WCD_pq1",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSourceData"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SavePostsData",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_my_blob",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveIncrementalDate"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FitlerOnlyIncrementalData"
+						},
+						{
+							"name": "GetIncrementalDate"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     incrementalDate as string ('2024-05-14T00:00:00')",
+						"}",
+						"source(output(",
+						"          id as integer,",
+						"          AcceptedAnswerId as integer,",
+						"          AnswerCount as integer,",
+						"          Body as string,",
+						"          CommentCount as integer,",
+						"          CreationDate as date,",
+						"          FavoriteCount as integer,",
+						"          LastEditDate as date,",
+						"          LastEditorDisplayName as string,",
+						"          LastEditorUserId as integer,",
+						"          OwnerUserId as integer,",
+						"          ParentId as integer,",
+						"          PostTypeId as integer,",
+						"          Score as float,",
+						"          Tags as string,",
+						"          Title as string,",
+						"          ViewCount as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     wildcardPaths:['*']) ~> ReadSourceData",
+						"ReadSourceData filter(LastEditDate > toDate($incrementalDate, 'yyyy-MM-dd')) ~> FitlerOnlyIncrementalData",
+						"FitlerOnlyIncrementalData aggregate(MaxLastEditDate = coalesce(toString(max(LastEditDate)), $incrementalDate)) ~> GetIncrementalDate",
+						"FitlerOnlyIncrementalData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'mydatalakefilesystem',",
+						"     folderPath: 'Capstone2/incremetal_pl/posts_incremental/inbound',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SavePostsData",
+						"GetIncrementalDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'mydatalakefilesystem',",
+						"     folderPath: 'Capstone2/incremetal_pl/incrementalDate',",
+						"     truncate: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SaveIncrementalDate"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_Posts_WCD_pq1')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_my_blob')]"
 			]
 		}
 	]
