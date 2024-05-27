@@ -367,6 +367,333 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/RunDaily_Incremental_Update')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Copy Posts parquet files daily from an WCD's Azure blob storage container",
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"description": "Get information about the dataset to check if there is any content",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_load_generic_pq",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "mydatalakefilesystem",
+									"path": "Capstone2/incrementalDate/"
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "ParquetReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Check If Files Exist",
+						"description": "An if condition activity that helps in deleting files only if the exist",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(activity('Get Metadata1').output.exists)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Set incremental date",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Get Incremental Date",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "incrementalDate",
+										"value": {
+											"value": "@activity('Get Incremental Date').output.firstRow.MaxLastEditDate",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Get Incremental Date",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"wildcardFileName": "*",
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"dataset": {
+											"referenceName": "ds_load_generic_pq",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "mydatalakefilesystem",
+												"path": "Capstone2/incrementalDate/"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Copy data from Blob",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Clean the posts inbound directory",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Load Posts Data",
+								"type": "DataFlowReference",
+								"parameters": {
+									"incrementalDate": {
+										"value": "'@{variables('incrementalDate')}'",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"ReadSourceData": {},
+									"SavePostsData": {},
+									"SaveIncrementalDate": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Clean the posts inbound directory",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Check If Files Exist",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_load_generic_pq",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "mydatalakefilesystem",
+									"path": "Capstone2/posts_incremental/inbound/"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*",
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Archive the data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ML Post Classification",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_load_generic_pq",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "mydatalakefilesystem",
+									"path": "Capstone2/posts_incremental/inbound"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_load_generic_pq",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "mydatalakefilesystem",
+									"path": {
+										"value": "@concat(\n    'Capstone2/posts_incremental/archive/',\n    formatDateTime(utcNow(), 'yyyy'),\n    '/',\n    formatDateTime(utcNow(), 'MM'),\n    '/',\n    formatDateTime(utcNow(), 'dd'),\n    '/'\n)",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "ML Post Classification",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Copy data from Blob",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Workspace/Users/amalalsarrar@gmail.com/5_Model_Prediction"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"FilesCopied": {
+						"type": "Boolean",
+						"defaultValue": false
+					},
+					"incrementalDate": {
+						"type": "String",
+						"defaultValue": "1900-01-01"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-25T17:04:20Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_load_generic_pq')]",
+				"[concat(variables('factoryId'), '/dataflows/Load Posts Data')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/RunOnceWeekly')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -733,6 +1060,32 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_Posts_WCD_pq1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This dataset represents the Posts parquet files stored on WeCloudData's storage blob.",
+				"linkedServiceName": {
+					"referenceName": "ls_wcd_blob",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "archive",
+						"container": "de-project-st"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_wcd_blob')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_Users_pg')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -833,6 +1186,46 @@
 					"escapeChar": "\\",
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_my_blob')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_load_generic_pq')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This data set loads post from we cloud data's blob storage to posts file in my blob storage in a Parquet format",
+				"linkedServiceName": {
+					"referenceName": "ls_my_blob",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().path",
+							"type": "Expression"
+						},
+						"container": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
 				},
 				"schema": []
 			},
@@ -1039,6 +1432,104 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/RunOnceWeekly')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Load Posts Data')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_Posts_WCD_pq1",
+								"type": "DatasetReference"
+							},
+							"name": "ReadSourceData"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "ls_my_blob",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SavePostsData",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_my_blob",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"linkedService": {
+								"referenceName": "ls_my_blob",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SaveIncrementalDate"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FitlerOnlyIncrementalData"
+						},
+						{
+							"name": "GetIncrementalDate"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     incrementalDate as string ('2024-05-14T00:00:00')",
+						"}",
+						"source(output(",
+						"          id as integer,",
+						"          AcceptedAnswerId as integer,",
+						"          AnswerCount as integer,",
+						"          Body as string,",
+						"          CommentCount as integer,",
+						"          CreationDate as date,",
+						"          FavoriteCount as integer,",
+						"          LastEditDate as date,",
+						"          LastEditorDisplayName as string,",
+						"          LastEditorUserId as integer,",
+						"          OwnerUserId as integer,",
+						"          ParentId as integer,",
+						"          PostTypeId as integer,",
+						"          Score as float,",
+						"          Tags as string,",
+						"          Title as string,",
+						"          ViewCount as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     wildcardPaths:['*']) ~> ReadSourceData",
+						"ReadSourceData filter(LastEditDate > toDate($incrementalDate, 'yyyy-MM-dd')) ~> FitlerOnlyIncrementalData",
+						"FitlerOnlyIncrementalData aggregate(MaxLastEditDate = coalesce(toString(max(LastEditDate)), $incrementalDate)) ~> GetIncrementalDate",
+						"FitlerOnlyIncrementalData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     container: 'mydatalakefilesystem',",
+						"     folderPath: 'Capstone2/posts_incremental/inbound',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SavePostsData",
+						"GetIncrementalDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     container: 'mydatalakefilesystem',",
+						"     folderPath: 'Capstone2/incrementalDate',",
+						"     truncate: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SaveIncrementalDate"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_Posts_WCD_pq1')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_my_blob')]"
 			]
 		}
 	]
